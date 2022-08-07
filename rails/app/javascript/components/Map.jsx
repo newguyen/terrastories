@@ -125,6 +125,10 @@ export default class Map extends Component {
       }
 
       this.addHomeButton();
+      this.addCompassButton();
+
+      this.rotateCompassArrow();
+
 
       // Attaches popups + events
       this.addMarkerClickHandler();
@@ -298,7 +302,57 @@ export default class Map extends Component {
     homeButton.addEventListener("click", () => {
       this.resetMapToCenter();
     });
+    this.homeButton = DOM.create('span', 'home-icon', this.homeButton);
   }
+
+  createCompassButton() {
+    const compassButton = document.createElement("button");
+    compassButton.setAttribute("aria-label", "cxompass");
+    compassButton.setAttribute("type", "button");
+    compassButton.setAttribute("class", "mapboxgl-ctrl-compass");
+
+    return compassButton;
+  }
+
+  addCompassButton() {
+    const compassButton = this.createCompassButton();
+    const navControl = document.getElementsByClassName(
+      "mapboxgl-ctrl-zoom-out"
+    )[0];
+    const compass = document.getElementsByClassName(
+      "mapboxgl-ctrl-compass"
+    )[0];
+    if (navControl) {
+      navControl.parentNode.insertBefore(compassButton, navControl.nextSibling);
+      //compass.remove(); //hides compass button
+    }
+
+    let userBearing = 0
+    compassButton.addEventListener("click", () => {
+      if (this.map.getBearing() != 0) {
+          userBearing = this.map.getBearing();
+          this.map.resetNorth({duration: 2000});
+      } else {
+          this.map.rotateTo(userBearing, {duration: 2000});
+      }
+    });
+
+  }
+
+  rotateCompassArrow() {
+    const map = this.map;
+    if (!map) return;
+
+    const rotate = this.options.visualizePitch ?
+        `scale(${1 / Math.pow(Math.cos(map.transform.pitch * (Math.PI / 180)), 0.5)}) rotateX(${map.transform.pitch}deg) rotateZ(${map.transform.angle * (180 / Math.PI)}deg)` :
+        `rotate(${map.transform.angle * (180 / Math.PI)}deg)`;
+
+    map.requestDomTask(() => {
+        if (this.homeButton) {
+            this.homeButton.style.transform = rotate;
+        }
+    });
+}
 
   closeActivePopup() {
     if (this.state.activePopup) {
