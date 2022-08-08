@@ -128,6 +128,12 @@ export default class Map extends Component {
       this.addCompassButton();
 
       this.map.on('rotate', () => {
+        if (!this.navControl) return;
+        const map = this.map;
+        const rotate = this.navControl ?
+            `scale(${1 / Math.pow(Math.cos(map.transform.pitch * (Math.PI / 180)), 0.5)}) rotateX(${map.transform.pitch}deg) rotateZ(${map.transform.angle * (180 / Math.PI)}deg)` :
+            `rotate(${map.transform.angle * (180 / Math.PI)}deg)`;
+        document.getElementsByClassName("mapboxgl-ctrl-compass")[0].firstChild.style.transform = rotate;
       });
 
       // Attaches popups + events
@@ -311,7 +317,10 @@ export default class Map extends Component {
     compassButton.setAttribute("aria-label", "custom-compass");
     compassButton.setAttribute("type", "button");
     compassButton.setAttribute("class", "custom-compass");
-
+    const compassIcon = document.createElement("span");
+    compassIcon.setAttribute("class", "mapboxgl-ctrl-icon");
+    compassIcon.setAttribute("aria-hidden", "true");
+    compassButton.appendChild(compassIcon);
     return compassButton;
   }
 
@@ -337,10 +346,7 @@ export default class Map extends Component {
           this.map.rotateTo(userBearing, {duration: 1000});
       }
     });
-
   }
-
-  
 
   closeActivePopup() {
     if (this.state.activePopup) {
