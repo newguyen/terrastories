@@ -127,8 +127,8 @@ export default class Map extends Component {
       this.addHomeButton();
       this.addCompassButton();
 
-      this.rotateCompassArrow();
-
+      this.map.on('rotate', () => {
+      });
 
       // Attaches popups + events
       this.addMarkerClickHandler();
@@ -142,7 +142,9 @@ export default class Map extends Component {
       this.map.addControl(new mapboxgl.Minimap(), "top-right");
     }
 
-    this.map.addControl(new mapboxgl.NavigationControl());
+    this.map.addControl(new mapboxgl.NavigationControl({
+      showCompass: false
+    }));
 
     // Change mouse pointer when hovering over ts-marker points
     this.map.on('mouseenter', STORY_POINTS_LAYER_ID, () => {
@@ -302,14 +304,13 @@ export default class Map extends Component {
     homeButton.addEventListener("click", () => {
       this.resetMapToCenter();
     });
-    this.homeButton = DOM.create('span', 'home-icon', this.homeButton);
   }
 
   createCompassButton() {
     const compassButton = document.createElement("button");
-    compassButton.setAttribute("aria-label", "cxompass");
+    compassButton.setAttribute("aria-label", "custom-compass");
     compassButton.setAttribute("type", "button");
-    compassButton.setAttribute("class", "mapboxgl-ctrl-compass");
+    compassButton.setAttribute("class", "custom-compass");
 
     return compassButton;
   }
@@ -331,28 +332,15 @@ export default class Map extends Component {
     compassButton.addEventListener("click", () => {
       if (this.map.getBearing() != 0) {
           userBearing = this.map.getBearing();
-          this.map.resetNorth({duration: 2000});
+          this.map.resetNorth({duration: 1000});
       } else {
-          this.map.rotateTo(userBearing, {duration: 2000});
+          this.map.rotateTo(userBearing, {duration: 1000});
       }
     });
 
   }
 
-  rotateCompassArrow() {
-    const map = this.map;
-    if (!map) return;
-
-    const rotate = this.options.visualizePitch ?
-        `scale(${1 / Math.pow(Math.cos(map.transform.pitch * (Math.PI / 180)), 0.5)}) rotateX(${map.transform.pitch}deg) rotateZ(${map.transform.angle * (180 / Math.PI)}deg)` :
-        `rotate(${map.transform.angle * (180 / Math.PI)}deg)`;
-
-    map.requestDomTask(() => {
-        if (this.homeButton) {
-            this.homeButton.style.transform = rotate;
-        }
-    });
-}
+  
 
   closeActivePopup() {
     if (this.state.activePopup) {
